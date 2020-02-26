@@ -1,0 +1,33 @@
+{
+  "name": "ang3/php-payload",
+  "type": "library",
+  "homepage": "https://github.com/Ang3/php-payload",
+  "description": "PHP payload decorator to manipulate metadata with encoding support of JSON, XML, YAML and CSV",
+  "keywords": ["payload", "json", "xml", "yaml", "csv", "response", "request", "property", "accessor", "mapping"],
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "Joanis ROUANET",
+      "homepage": "https://github.com/Ang3"
+    }
+  ],
+  "autoload": {
+    "psr-4": {"Ang3\\Component\\Http\\": "src/"}
+  },
+  "autoload-dev": {
+    "psr-4": { "Ang3\\Component\\Http\\Tests\\": "tests/" }
+  },
+  "require": {
+    "php": "^7.1",
+    "psr/http-message": "^1.0",
+    "symfony/cache": "^4.2.12 || ^4.3 || ^5.0",
+    "symfony/property-access": "^3.0 || ^4.0",
+    "symfony/serializer": "^3.2 || ^4.0",
+    "symfony/yaml": "^3.0 || ^4.0"
+  },
+  "require-dev": {
+    "symfony/var-dumper": "^3.0 || ^4.0",
+    "symfony/phpunit-bridge": "^5.0",
+    "ang3/php-dev-binaries": "^1.0"
+  }
+}
