@@ -526,12 +526,6 @@ class Payload implements IteratorAggregate
             throw new InvalidArgumentException(sprintf('The format "%s" is not supported', $format));
         }
 
-        // Si on est sur le format CSV
-        if (self::CSV_FORMAT === $format) {
-            // Récupération de la découverte des données à plat
-            $data = $this->discover();
-        }
-
         try {
             return self::getSerializer()->encode($this->data, $format, $context);
         } catch (Throwable $e) {
