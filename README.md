@@ -140,8 +140,10 @@ I highly suggest you to read the [documentation](https://symfony.com/doc/current
 
 All encoders are created with *default context*, **except** JSON and CSV encoder:
 
-- ```JSON``` by default Symfony enables the "associative" option but property paths are more complicated than objects ones in a payload mapping context. It's a personal choice but thoughtful in an API flows normalization context.
-- ```CSV``` the option "as_collection" is set ```true``` (by default in ```symfony/serializer ^5.0```)
+- ```JSON```
+  - By default Symfony enables the "associative" option but property paths are more complicated than objects ones in a payload mapping context. It's a personal choice but thoughtful in an API flows normalization context.
+- ```CSV```
+  - The option ```as_collection``` is set ```true``` (by default in ```symfony/serializer ^5.0```)
 
 ```php
 // Use a static method to create th payload from a content
