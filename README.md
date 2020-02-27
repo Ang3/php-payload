@@ -136,7 +136,7 @@ $originalData = $payload->getData();
 
 ### Parse a payload
 
-I highly suggest you to read the [documentation]((https://symfony.com/doc/current/components/serializer.html#encoders)) of the component "Serializer" to know more about *encoding context* (options).
+I highly suggest you to read the [documentation](https://symfony.com/doc/current/components/serializer.html#encoders) of the component "Serializer" to know more about *encoding context* (options).
 
 All encoders are created with *default context*, **except** JSON and CSV encoder:
 
