@@ -46,7 +46,7 @@ class Payload implements IteratorAggregate
     private $propertyAccessor;
 
     /**
-     * @var object|iterable|null
+     * @var object|iterable
      */
     private $data;
 
@@ -207,6 +207,16 @@ class Payload implements IteratorAggregate
     }
 
     /**
+     * @static
+     *
+     * @param mixed $data
+     */
+    public static function supports($data): bool
+    {
+        return is_object($data) || is_iterable($data);
+    }
+
+    /**
      * {@inheritdoc}.
      */
     public function getIterator()
@@ -235,20 +245,8 @@ class Payload implements IteratorAggregate
         return $this->discoverData($data, $options);
     }
 
-    public function isEmpty(bool $strict = false): bool
+    public function isEmpty(): bool
     {
-        if (null === $this->data) {
-            return true;
-        }
-
-        if (true === $strict) {
-            return false;
-        }
-
-        if (is_array($this->data) && !$this->data) {
-            return true;
-        }
-
         // Récupération des propriétés racines des données
         $rootProperties = $this->discoverData($this->data, [
             'recursive' => false,
@@ -370,7 +368,8 @@ class Payload implements IteratorAggregate
     }
 
     /**
-     * @throws OutOfBoundsException when the path is not readable
+     * @throws OutOfBoundsException     when the path is not readable
+     * @throws InvalidArgumentException when a payload cannot be created with target value
      */
     public function slice(string $path): Payload
     {
@@ -379,8 +378,15 @@ class Payload implements IteratorAggregate
             throw new OutOfBoundsException(sprintf('The path "%s" is not readable', $path));
         }
 
+        $value = $this->get($path);
+
+        // Si on ne peut pas créer de payload avec la valeur cible
+        if (!self::supports($value)) {
+            throw new InvalidArgumentException(sprintf('Cannot slice the payload at path "%s" with type "%s"', $path, gettype($value)));
+        }
+
         // Retour d'un nouveau payload selon la valeur
-        return new Payload($this->get($path));
+        return new Payload($value);
     }
 
     /**
@@ -431,13 +437,18 @@ class Payload implements IteratorAggregate
 
     /**
      * @param mixed $data
+     *
+     * @throws InvalidArgumentException when the type of data is not supported
      */
     public function setData($data): self
     {
+        // Si pas d'objet ni de données itérables
+        if (!self::supports($data)) {
+            throw new InvalidArgumentException(sprintf('Expected data of type "object|iterable", "%s" given', gettype($data)));
+        }
+
         // Hydratation
-        $this->data = null === $data ? $data : (is_object($data) || is_iterable($data) ? $data : (object) [
-            is_scalar($data) ? 'scalar' : gettype($data) => $data,
-        ]);
+        $this->data = $data;
 
         // Nettoyage du cache
         $this->clearCache();
@@ -446,7 +457,7 @@ class Payload implements IteratorAggregate
     }
 
     /**
-     * @return object|iterable|null
+     * @return object|iterable
      */
     public function getData()
     {

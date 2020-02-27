@@ -25,25 +25,29 @@ require_once 'vendor/autoload.php';
 
 use Ang3\Component\Http\Payload;
 
-// Your data... Whatever...
-$data = json_decode('{
-    "results": [
-        {
-            "error": {
-                "id": 0,
-                "name": "NO_ERROR",
-                "description": "No Error",
-                "groupId": 0,
-                "groupName": "OK",
-                "permanent": false
-            },
-            "id": "8779618781693984179",
-        }
-    ]
-}');
+// Your data...
+$myData = [
+  'foo' => [
+    'bar' => 'baz'
+  ]
+];
 
 // Create the payload instance from data (mixed)
-$payload = new Payload($data); // No exception
+$payload = new Payload($myData);
+```
+
+- An ```InvalidArgumentException``` is thrown if the type of data is not ```object|iterable```.
+
+You can check if a payload can be created with the static method ```supports```:
+
+```php
+// ...
+
+if(Payload::supports($myData)) {
+  $payload = new Payload($myData);
+} else {
+  // The payload cannot be created
+}
 ```
 
 ### Discover values

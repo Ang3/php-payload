@@ -128,36 +128,12 @@ class PayloadTest extends TestCase
         $emptyObject = new EmptyObject();
 
         return [
-            // Strict: FALSE
-            [null, false, true],
-            [true, false, false],
-            [false, false, false],
-            [0, false, false],
-            [1, false, false],
-            [0.00, false, false],
-            ['', false, false],
-            ['foo', false, false],
-            [[], false, true],
-            [['foo'], false, false],
-            [$emptyStandardObject, false, true],
-            [$standardObject, false, false],
-            [$this, false, false],
-            [$emptyObject, false, true],
-            // Strict: TRUE
-            [null, true, true],
-            [true, true, false],
-            [false, true, false],
-            [0, true, false],
-            [1, true, false],
-            [0.00, true, false],
-            ['', true, false],
-            ['foo', true, false],
-            [[], true, false],
-            [['foo'], true, false],
-            [$emptyStandardObject, true, false],
-            [$standardObject, true, false],
-            [$this, true, false],
-            [$emptyObject, true, false],
+            [[], true],
+            [['foo'], false],
+            [$emptyStandardObject, true],
+            [$standardObject, false],
+            [$this, false],
+            [$emptyObject, true],
         ];
     }
 
@@ -167,11 +143,11 @@ class PayloadTest extends TestCase
      *
      * @param mixed $data
      */
-    public function testIsEmpty($data, bool $strict, bool $result): void
+    public function testIsEmpty($data, bool $result): void
     {
         $payload = new Payload($data);
 
-        $this->assertEquals($result, $payload->isEmpty($strict));
+        $this->assertEquals($result, $payload->isEmpty());
     }
 
     /**
