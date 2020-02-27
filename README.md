@@ -195,8 +195,8 @@ $subPayload = $payload->slice('[foo]'); // Contains just $myData['foo']
 
 ## Todo
 
-- [ ] Write missing tests.
-- [ ] Payload related exceptions.
+- [ ] Write missing tests
+- [ ] Payload related exceptions
 
 ## Run tests
 
