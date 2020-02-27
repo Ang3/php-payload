@@ -201,7 +201,7 @@ $myData = [
 $payload = new Payload($myData);
 
 // Slice it and get a new Payload with target value
-$subPayload = $payload->slice('[foo][bar]'); // Contains just 'baz'
+$subPayload = $payload->slice('[foo]'); // Contains just $myData['foo']
 ```
 
 - An ```OutOfBoundsException``` is thrown if the path is not readable.
