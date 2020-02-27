@@ -5,6 +5,7 @@ namespace Ang3\Component\Http\Tests;
 use Ang3\Component\Http\Payload;
 use OutOfBoundsException;
 use PHPUnit\Framework\TestCase;
+use Symfony\Component\Serializer\Serializer;
 use stdClass;
 
 /**
@@ -43,6 +44,33 @@ class PayloadTest extends TestCase
 
         $this->arrayPayload = Payload::create($this->data);
         $this->objectPayload = Payload::create((object) $this->data);
+    }
+
+    /**
+     * @covers ::getSerializer
+     */
+    public function testGetSerializer(): void
+    {
+        $this->assertInstanceOf(Serializer::class, $this->arrayPayload::getSerializer());
+        $this->assertInstanceOf(Serializer::class, $this->objectPayload::getSerializer());
+    }
+
+    /**
+     * @covers ::buildHttpQuery
+     */
+    public function testBuildHttpQuery(): void
+    {
+        $this->assertEquals('foo%5B0%5D%5Bbar%5D=qux', $this->arrayPayload->buildHttpQuery());
+        $this->assertEquals('foo%5B0%5D%5Bbar%5D=qux', $this->objectPayload->buildHttpQuery());
+    }
+
+    /**
+     * @covers ::encode
+     */
+    public function testEncodeJson(): void
+    {
+        $this->assertEquals('{"foo":[{"bar":"qux","baz":null}],"bar":null}', $this->arrayPayload->encode('json'));
+        $this->assertEquals('{"foo":[{"bar":"qux","baz":null}],"bar":null}', $this->objectPayload->encode('json'));
     }
 
     /**

@@ -8,7 +8,6 @@ use OutOfBoundsException;
 use Psr\Http\Message\ResponseInterface;
 use RuntimeException;
 use stdClass;
-use Symfony\Component\Cache\Adapter\ArrayAdapter;
 use Symfony\Component\PropertyAccess\PropertyAccessor;
 use Symfony\Component\PropertyAccess\PropertyAccessorInterface;
 use Symfony\Component\Serializer\Encoder\CsvEncoder;
@@ -19,7 +18,6 @@ use Symfony\Component\Serializer\Encoder\XmlEncoder;
 use Symfony\Component\Serializer\Encoder\YamlEncoder;
 use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
 use Symfony\Component\Serializer\Serializer;
-use Symfony\Contracts\Cache\ItemInterface;
 use Throwable;
 
 /**
@@ -36,11 +34,6 @@ class Payload implements IteratorAggregate
     const CSV_FORMAT = 'csv';
 
     /**
-     * Cache keys.
-     */
-    const DISCOVERY_CACHE_KEY = 'payload_discovery_cache';
-
-    /**
      * @var PropertyAccessorInterface
      */
     private $propertyAccessor;
@@ -49,11 +42,6 @@ class Payload implements IteratorAggregate
      * @var object|iterable
      */
     private $data;
-
-    /**
-     * @var ArrayAdapter
-     */
-    private $cache;
 
     /**
      * @var Serializer|null
@@ -69,13 +57,6 @@ class Payload implements IteratorAggregate
     {
         // Hydratation
         $this->propertyAccessor = new PropertyAccessor();
-        $this->cache = new ArrayAdapter(
-            // Pas d'expiration
-            $defaultLifetime = 0,
-
-            // Sérialisation des clients
-            $storeSerialized = true
-        );
         $this->setData($data);
     }
 
@@ -265,108 +246,104 @@ class Payload implements IteratorAggregate
      */
     private function discoverData($data, array $context = []): array
     {
-        $payload = $this;
+        // Normalisation du contexte
+        $context = array_merge([
+            'path' => !empty($context['path']) ? $context['path'] : null,
+            'recursive' => true,
+            'excluded_classes' => isset($context['excluded_classes']) ? (array) $context['excluded_classes'] : [],
+        ], $context);
 
-        return $this->cache->get($this->getCacheKey(self::DISCOVERY_CACHE_KEY), function (ItemInterface $item) use ($payload, $data, $context) {
-            // Normalisation des context
-            $context = array_merge([
-                'path' => !empty($context['path']) ? $context['path'] : null,
-                'recursive' => true,
-                'excluded_classes' => isset($context['excluded_classes']) ? (array) $context['excluded_classes'] : [],
-            ], $context);
+        // Définition des valeurs par défaut selon les données
+        $values = $data;
 
-            // Définition des valeurs par défaut selon les données
-            $values = $data;
+        // Si pas de données
+        if (null === $data) {
+            // Retour d'un tableau vide
+            return [];
+        }
 
-            // Si pas de données
-            if (null === $data) {
+        // Si les valeurs ne sont pas itérables
+        if (!is_iterable($values)) {
+            // Si les valeurs sont sous forme d'objet standard
+            if ($values instanceof stdClass) {
+                // Récupération des propriétés de l'objet
+                $values = get_object_vars($values);
+            } else {
+                // Récupération du sérialiseur
+                $serializer = self::getSerializer();
+
+                // Si le sérialiseur ne supporte pas les données
+                if (!$serializer->supportsNormalization($values)) {
+                    // Objectization des données
+                    $values = (object) $values;
+                }
+
+                // Normalisation des données
+                $values = $serializer->normalize($values);
+
+                // Retour de données iterables
+                $values = is_iterable($values) ? $values : get_object_vars((object) $values);
+            }
+        }
+
+        // Si les données sont sous forme d'objet non standard
+        if (is_object($data) && !($data instanceof stdClass)) {
+            // Récupération de la classe de l'objet
+            $className = get_class($data);
+
+            // Si la classe est exclut dans le contexte
+            if (in_array($className, $context['excluded_classes'])) {
                 // Retour d'un tableau vide
                 return [];
             }
 
-            // Si les valeurs ne sont pas itérables
-            if (!is_iterable($values)) {
-                // Si les valeurs sont sous forme d'objet standard
-                if ($values instanceof stdClass) {
-                    // Récupération des propriétés de l'objet
-                    $values = get_object_vars($values);
-                } else {
-                    // Récupération du sérialiseur
-                    $serializer = $payload::getSerializer();
+            // Exclusion de la classe que l'on analyse
+            $context['excluded_classes'][] = $className;
+        }
 
-                    // Si le sérialiseur ne supporte pas les données
-                    if (!$serializer->supportsNormalization($values)) {
-                        // Objectization des données
-                        $values = (object) $values;
-                    }
+        // Si les données ne sont toujours pas itérables
+        if (!is_iterable($values)) {
+            // Retour d'un tableau vide
+            return [];
+        }
 
-                    // Normalisation des données
-                    $values = $serializer->normalize($values);
+        // Initialisation du préfixe du chemin
+        $pathPrefix = $context['path'] ?: '';
 
-                    // Retour de données iterables
-                    $values = is_iterable($values) ? $values : get_object_vars((object) $values);
+        // Initialisation du résultat
+        $result = [];
+
+        // Pour chaque valeur dans les données itérables
+        foreach ($values as $key => $value) {
+            // Définition du suffixe à ajouter dans le chemin
+            $suffix = is_object($data) ? sprintf('%s%s', $pathPrefix ? '.' : '', $key) : sprintf('[%s]', $key);
+
+            // Mise-à-jour de la clé selon le préfixe de ce niveau
+            $key = $pathPrefix.$suffix;
+
+            // Si la valeur est un objet ou un tableau
+            if (is_object($value) || is_iterable($value)) {
+                // Si on a activé l'option de récursivité
+                if (true === $context['recursive']) {
+                    // Découverte des valeurs par récursivité
+                    $result = array_merge($result, $this->discoverData($value, array_merge($context, [
+                        'path' => $key,
+                    ])));
+
+                    // Valeur suivante
+                    continue;
                 }
             }
 
-            // Si les données sont sous forme d'objet non standard
-            if (is_object($data) && !($data instanceof stdClass)) {
-                // Récupération de la classe de l'objet
-                $className = get_class($data);
-
-                // Si la classe est exclut dans le contexte
-                if (in_array($className, $context['excluded_classes'])) {
-                    // Retour d'un tableau vide
-                    return [];
-                }
-
-                // Exclusion de la classe que l'on analyse
-                $context['excluded_classes'][] = $className;
+            // Si la clé est lisible par l'accesseur de propriété
+            if ($this->isReadable($key)) {
+                // Enregistrement de la valeur non découvrable
+                $result[$key] = $value;
             }
+        }
 
-            // Si les données ne sont toujours pas itérables
-            if (!is_iterable($values)) {
-                // Retour d'un tableau vide
-                return [];
-            }
-
-            // Initialisation du préfixe du chemin
-            $pathPrefix = $context['path'] ?: '';
-
-            // Initialisation du résultat
-            $result = [];
-
-            // Pour chaque valeur dans les données itérables
-            foreach ($values as $key => $value) {
-                // Définition du suffixe à ajouter dans le chemin
-                $suffix = is_object($data) ? sprintf('%s%s', $pathPrefix ? '.' : '', $key) : sprintf('[%s]', $key);
-
-                // Mise-à-jour de la clé selon le préfixe de ce niveau
-                $key = $pathPrefix.$suffix;
-
-                // Si la valeur est un objet ou un tableau
-                if (is_object($value) || is_iterable($value)) {
-                    // Si on a activé l'option de récursivité
-                    if (true === $context['recursive']) {
-                        // Découverte des valeurs par récursivité
-                        $result = array_merge($result, $payload->discoverData($value, array_merge($context, [
-                            'path' => $key,
-                        ])));
-
-                        // Valeur suivante
-                        continue;
-                    }
-                }
-
-                // Si la clé est lisible par l'accesseur de propriété
-                if ($payload->isReadable($key)) {
-                    // Enregistrement de la valeur non découvrable
-                    $result[$key] = $value;
-                }
-            }
-
-            // Retour des valeurs
-            return $result;
-        });
+        // Retour des valeurs
+        return $result;
     }
 
     /**
@@ -395,6 +372,7 @@ class Payload implements IteratorAggregate
      * @param mixed|null $value
      *
      * @throws OutOfBoundsException when the path is not writable
+     * @throws RuntimeException     when setting value failed
      */
     public function set(string $path, $value = null): self
     {
@@ -403,11 +381,12 @@ class Payload implements IteratorAggregate
             throw new OutOfBoundsException(sprintf('The path "%s" is not writable', $path));
         }
 
-        // Enregistrement de la valeur de la propriété
-        $this->propertyAccessor->setValue($this->data, $path, $value);
-
-        // Nettoyage du cache
-        $this->clearCache();
+        try {
+            // Enregistrement de la valeur de la propriété
+            $this->propertyAccessor->setValue($this->data, $path, $value);
+        } catch (Throwable $e) {
+            throw new RuntimeException(sprintf('Failed to write in path "%s" - %s', $path, $e->getMessage()), 0, $e);
+        }
 
         // Retour du payload
         return $this;
@@ -452,9 +431,6 @@ class Payload implements IteratorAggregate
         // Hydratation
         $this->data = $data;
 
-        // Nettoyage du cache
-        $this->clearCache();
-
         return $this;
     }
 
@@ -464,12 +440,6 @@ class Payload implements IteratorAggregate
     public function getData()
     {
         return $this->data;
-    }
-
-    public function clearCache(): void
-    {
-        // Réinitialisation du cache de découverte
-        $this->cache->delete($this->getCacheKey(self::DISCOVERY_CACHE_KEY));
     }
 
     /**
@@ -570,13 +540,5 @@ class Payload implements IteratorAggregate
         }
 
         return self::$serializer;
-    }
-
-    /**
-     * @internal
-     */
-    private function getCacheKey(string $name): string
-    {
-        return sprintf('%s.%s', spl_object_hash($this), $name);
     }
 }

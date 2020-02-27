@@ -8,13 +8,11 @@ This decorator provides the useful method ```discover``` so as to get all data p
 
 ## Installation
 
-You can install the component in 2 different ways:
+```shell
+composer require ang3/php-payload
+```
 
-- Install it via Composer (ang3/php-payload on Packagist)
-- Use the official Git repository (https://github.com/Ang3/php-payload).
-
-Then, require the vendor/autoload.php file to enable the autoloading mechanism provided by Composer. 
-Otherwise, your application won't be able to find the classes of this component.
+If you install this component outside of a Symfony application, you must require the vendor/autoload.php file in your code to enable the class autoloading mechanism provided by Composer. Read [this article](https://symfony.com/doc/current/components/using_components.html) for more details.
 
 ## Usage
 
@@ -125,6 +123,9 @@ $payload->set('results[0].error.name', 'UNKOWN_ERROR');
 // You can set simple var thanks to the magic method "__set"
 $payload->myVar = 'foo';
 ```
+
+- A ```OutOfBoundsException``` is thrown when the path is not writable.
+- A ```RuntimeException``` is thrown if setting value failed.
 
 **Retrieve data**
 
