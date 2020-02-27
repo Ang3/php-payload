@@ -138,7 +138,7 @@ $originalData = $payload->getData();
 
 I highly suggest you to read the [documentation](https://symfony.com/doc/current/components/serializer.html#encoders) of the component "Serializer" to know more about *encoding context* (options).
 
-All encoders are created with *default context*, **except** JSON and CSV encoder:
+All encoders are created with *default context*, **except** JSON and CSV encoders:
 
 - ```JSON```
   - By default Symfony enables the "associative" option but property paths are more complicated than objects ones in a payload mapping context. It's a personal choice but thoughtful in an API flows normalization context.
@@ -157,7 +157,7 @@ $payload = Payload::parseCsv($data, $context = []);
 $payload = Payload::parseResponse($response, 'json', $context = []); // formats: 'json', 'xml', 'yaml', 'csv'
 ```
 
-- A ```RuntimeException``` is thrown if a package is missing or decoding failed.
+- A ```RuntimeException``` is thrown if decoding failed.
 
 Of course, you can encode your payload easily too:
 
@@ -169,7 +169,7 @@ $yaml = $payload->toYaml($context = []);
 $csv = $payload->toCsv($context = []);
 ```
 
-- A ```RuntimeException``` is thrown if a package is missing or decoding failed.
+- A ```RuntimeException``` is thrown if decoding failed.
 
 ### Slice a payload
 
