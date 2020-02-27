@@ -189,6 +189,7 @@ $subPayload = $payload->slice('[foo]'); // Contains just $myData['foo']
 ```
 
 - An ```OutOfBoundsException``` is thrown if the path is not readable.
+- An ```InvalidArgumentException``` is thrown if the type of the target value is not supported.
 
 ## Todo
 
