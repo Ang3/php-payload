@@ -41,8 +41,8 @@ class PayloadTest extends TestCase
             'bar' => null,
         ];
 
-        $this->arrayPayload = new Payload($this->data);
-        $this->objectPayload = new Payload((object) $this->data);
+        $this->arrayPayload = Payload::create($this->data);
+        $this->objectPayload = Payload::create((object) $this->data);
     }
 
     /**
@@ -145,7 +145,7 @@ class PayloadTest extends TestCase
      */
     public function testIsEmpty($data, bool $result): void
     {
-        $payload = new Payload($data);
+        $payload = Payload::create($data);
 
         $this->assertEquals($result, $payload->isEmpty());
     }

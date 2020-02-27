@@ -18,7 +18,7 @@ Otherwise, your application won't be able to find the classes of this component.
 
 ## Usage
 
-### Create a payload
+**Create a payload**
 
 ```php
 require_once 'vendor/autoload.php';
@@ -32,8 +32,8 @@ $myData = [
   ]
 ];
 
-// Create the payload instance from data (mixed)
-$payload = new Payload($myData);
+// Create the payload instance from data (object|iterable)
+$payload = Payload::create($myData);
 ```
 
 - An ```InvalidArgumentException``` is thrown if the type of data is not ```object|iterable```.
@@ -41,8 +41,6 @@ $payload = new Payload($myData);
 You can check if a payload can be created with the static method ```supports```:
 
 ```php
-// ...
-
 if(Payload::supports($myData)) {
   $payload = new Payload($myData);
 } else {
@@ -50,11 +48,11 @@ if(Payload::supports($myData)) {
 }
 ```
 
-### Discover values
+**Discover values**
+
+This method returns an array of all flattened properties of data. Each key is a valid *property path*.
 
 ```php
-// ...
-
 // Default options of the discovery
 $defaultOptions = [
   'recursive' => true, // Traverse iterable values and objects through property accessor component
@@ -89,13 +87,9 @@ foreach($payload as $flattenedKey => $value) {
 }
 ```
 
-On each operation, the payload normalizes data so as to be able to traverse all types of variables.
-
-### Check values
+**Check values**
 
 ```php
-// ...
-
 // Check is the path is readable
 $payload->isReadable('results[0].error.name'); // Returns bool
 
@@ -106,19 +100,15 @@ $payload->isWritable('results[0].error.name'); // Returns bool
 Whatever the type of data, you can check if the payload has at least one property.
 
 ```php
-// ...
-
 // If the payload has at least one property (not empty)
 if(!$payload->isEmpty()) {
   //...
 }
 ```
 
-### Read values
+**Read values**
 
 ```php
-// ...
-
 // Get the value from a property path
 $payload->get('results[0].error.name', $defaultValue = null); // Output: "NO_ERROR"
 
@@ -126,11 +116,9 @@ $payload->get('results[0].error.name', $defaultValue = null); // Output: "NO_ERR
 $myVar = $payload->myVar;
 ```
 
-### Write values
+**Write values**
 
 ```php
-// ...
-
 // Update a value from a property path
 $payload->set('results[0].error.name', 'UNKOWN_ERROR');
 
@@ -138,24 +126,24 @@ $payload->set('results[0].error.name', 'UNKOWN_ERROR');
 $payload->myVar = 'foo';
 ```
 
-### Retrieve original data
+**Retrieve data**
+
+Just use the getter:
 
 ```php
-// ...
-// 
-// Do not forget main things..
 $originalData = $payload->getData();
 ```
 
 ### Parse a payload
 
-I highly suggest you to read the [documentation]((https://symfony.com/doc/current/components/serializer.html#encoders)) of the component to know more about *encoding context* (options).
+I highly suggest you to read the [documentation]((https://symfony.com/doc/current/components/serializer.html#encoders)) of the component "Serializer" to know more about *encoding context* (options).
 
-All encoders are created *on demand* and locally cached with *default context*, **except** JSON encoder. Indeed, by default Symfony enables the "associative" option but property paths are more complicated than objects ones in a payload mapping context. It's a personal choice but thoughtful in an API flows normalization context.
+All encoders are created with *default context*, **except** JSON and CSV encoder:
+
+- ```JSON``` by default Symfony enables the "associative" option but property paths are more complicated than objects ones in a payload mapping context. It's a personal choice but thoughtful in an API flows normalization context.
+- ```CSV``` the option "as_collection" is set ```true``` (by default in ```symfony/serializer ^5.0```)
 
 ```php
-// ...
-
 // Use a static method to create th payload from a content
 $payload = Payload::parseJson($data, $context = []);
 $payload = Payload::parseXml($data, $context = []);
@@ -172,8 +160,6 @@ $payload = Payload::parseResponse($response, 'json', $context = []); // formats:
 Of course, you can encode your payload easily too:
 
 ```php
-// ...
-
 // Encoding payload data to desired format
 $json = $payload->toJson($context = []);
 $xml = $payload->toXml($context = []);
@@ -188,8 +174,6 @@ $csv = $payload->toCsv($context = []);
 To get a new payload from the path of an existent payload, just call the ```slice``` method like an array:
 
 ```php
-// ...
-
 // Fake data
 $myData = [
   'foo' => [
