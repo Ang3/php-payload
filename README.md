@@ -42,7 +42,7 @@ You can check if a payload can be created with the static method ```supports```:
 
 ```php
 if(Payload::supports($myData)) {
-  $payload = new Payload($myData);
+  $payload = Payload::create($myData);
 } else {
   // The payload cannot be created
 }
@@ -182,9 +182,9 @@ $myData = [
 ];
 
 // Create the payload normally
-$payload = new Payload($myData);
+$payload = Payload::create($myData);
 
-// Slice it and get a new Payload with target value
+// Slice it and get a new payload with target value
 $subPayload = $payload->slice('[foo]'); // Contains just $myData['foo']
 ```
 
