@@ -152,9 +152,8 @@ $payload = Payload::parseXml($data, $context = []);
 $payload = Payload::parseYaml($data, $context = []);
 $payload = Payload::parseCsv($data, $context = []);
 
-// Or parse directly a response or a request
-// DO NOT FORGET TO INSTALL NEEDED PACKAGES
-$payload = Payload::parseResponse($response, 'json', $context = []); // formats: 'json', 'xml', 'yaml', 'csv'
+// Or parse directly a response
+$payload = Payload::parseResponse($response, 'json', $context = []);
 ```
 
 - A ```RuntimeException``` is thrown if decoding failed.

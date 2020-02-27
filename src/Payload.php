@@ -61,9 +61,11 @@ class Payload implements IteratorAggregate
     private static $serializer;
 
     /**
+     * @internal
+     *
      * @param mixed $data
      */
-    private function __construct($data)
+    protected function __construct($data)
     {
         // Hydratation
         $this->propertyAccessor = new PropertyAccessor();
