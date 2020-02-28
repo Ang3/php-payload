@@ -213,6 +213,6 @@ $ ./vendor/bin/simple-phpunit
 
 ## Update logs
 
-### v1.0.0
+**v1.0.0**
 
 - First release

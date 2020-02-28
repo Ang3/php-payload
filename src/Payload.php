@@ -520,7 +520,7 @@ class Payload implements IteratorAggregate
     }
 
     /**
-     * @static]
+     * @static
      */
     public static function getSerializer(): Serializer
     {
